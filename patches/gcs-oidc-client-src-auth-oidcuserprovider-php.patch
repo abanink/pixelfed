@@ -1,0 +1,28 @@
+--- /dev/null
++++ ../src/Auth/OIDCUserProvider.php
+@@ -13,13 +13,12 @@
+ 
+     public function retrieveByInfo($user_info)
+     {
+-        $model = config('auth.providers.users.model');
+-        $user = new $model ([
+-            'uuid' => $user_info->shared_id,
+-            'first_name' => $user_info->first_name,
+-            'last_name' => $user_info->last_name,
+-            'email' => $user_info->email
+-        ]);
++
++	// matching user by email for now - this shouldn't be needed as we should use the id_token to match it with the local account
++
++	$user = config('auth.providers.users.model')::where('email', $user_info->email)->first();
++	\Log::info('OIDCUserProvider::retrieveByInfo(): found user with email = ' . print_r($user_info->email, true));
++
+         return $user;
+     }
+ 
+@@ -80,4 +79,4 @@
+     {
+         return true;
+     }
+-}
++}
