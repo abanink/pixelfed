@@ -106,6 +106,8 @@ class MediaStorageService {
 		$media->save();
 		if($media->status_id) {
 			Cache::forget('status:transformer:media:attachments:' . $media->status_id);
+			MediaService::del($media->status_id);
+			StatusService::del($media->status_id, false);
 		}
 	}
 
@@ -272,6 +274,6 @@ class MediaStorageService {
 		if(!$confirm) {
 			return;
 		}
-		MediaDeletePipeline::dispatch($media);
+		MediaDeletePipeline::dispatch($media)->onQueue('mmo');
 	}
 }
