@@ -159,7 +159,8 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         // App\Providers\TelescopeServiceProvider::class,
-        App\Providers\PassportServiceProvider::class,
+	App\Providers\PassportServiceProvider::class,
+	GCS\OIDCClient\OIDCServiceProvider::class,
 
     ],
 
