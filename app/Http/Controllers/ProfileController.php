@@ -77,8 +77,15 @@ class ProfileController extends Controller
 			});
 
 			if ($user->is_private == true) {
-				$profile = null;
-				return view('profile.private', compact('user'));
+				\Log::debug('Reached the point where we see the user is private - we check if the user has been remotely authenticated, then they can view it');
+				$authorized_profile = $request->session()->get('authorized_profile');
+				if ($authorized_profile) {
+					\Log::debug('Remote user ID ' . $authorized_profile . ' is allowed to view this private page because he is authorized via remote auth');
+				} else {
+					\Log::debug('No remotely authenticated user found, so remote user not authorized');
+					$profile = null;
+					return view('profile.private', compact('user'));
+				}
 			}
 
 			$owner = false;

@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\OwaController;
+
+Route::domain(config('pixelfed.domain.app'))->group(function() {
+	Route::get('/owa', OwaController::class);
+});
+
 Route::domain(config('pixelfed.domain.admin'))->prefix('i/admin')->group(function () {
 	Route::redirect('/', '/dashboard');
 	Route::redirect('timeline', config('app.url').'/timeline');

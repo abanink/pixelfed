@@ -676,8 +676,9 @@ class PublicApiController extends Controller
             'limit' => 'nullable|integer|min:1|max:24'
         ]);
 
-        $user = $request->user();
+	$user = $request->user();
         $profile = AccountService::get($id);
+	\Log::info('PublicApiController::accountStatuses entered. User = ' . print_r($user, true) . ' / id = ' . $id . ' / profile =  ' . print_r($profile, true));
         abort_if(!$profile, 404);
 
         $limit = $request->limit ?? 9;
@@ -690,11 +691,14 @@ class PublicApiController extends Controller
         	$min_id = 1;
         }
 
-        if($profile['locked']) {
-            if(!$user) {
+	if($profile['locked']) {
+		$auth_profile_id = $request->session()->get('authorized_profile');
+		\Log::info('Authorized profile = ' . print_r($auth_profile_id, true));
+            if(!$user && !$auth_profile_id) {
                 return response()->json([]);
             }
-            $pid = $user->profile_id;
+	    $pid = $user ? $user->profile_id : $auth_profile_id;
+	    \Log::info('profile id = ' . print_r($pid, true));
             $following = Cache::remember('profile:following:'.$pid, now()->addMinutes(1440), function() use($pid) {
                 $following = Follower::whereProfileId($pid)->pluck('following_id');
                 return $following->push($pid)->toArray();
