@@ -77,12 +77,24 @@ class ProfileController extends Controller
 			});
 
 			if ($user->is_private == true) {
-				\Log::debug('Reached the point where we see the user is private - we check if the user has been remotely authenticated, then they can view it');
-				$authorized_profile = $request->session()->get('authorized_profile');
-				if ($authorized_profile) {
-					\Log::debug('Remote user ID ' . $authorized_profile . ' is allowed to view this private page because he is authorized via remote auth');
-				} else {
-					\Log::debug('No remotely authenticated user found, so remote user not authorized');
+				$authorized = false;
+				\Log::debug('Reached the point where we see the user is private - we check if the user has been remotely authenticated and is a follower, then they can view it');
+				$authorized_profile_id = $request->session()->get('authorized_profile');
+				if ($authorized_profile_id) {
+					\Log::debug('Remote user ID ' . $authorized_profile_id . ' is authorized via remote auth');
+					   $followerProfile = Profile::whereId($authorized_profile_id)->first();
+						if (is_null($followerProfile)) {
+							\Log::info('Unable to establish followership of profile ID ' . $authorized_profile_id . ' on user ' . $username . ' (ID ' . $user->id . ') => not authorized to view private profile');
+						} elseif (!FollowerService::follows($authorized_profile_id, $user->id)) {
+							\Log::info(print_r($authorized_profile_id, true) . ' is NOT a follower of ' . print_r($username, true) . ' => not authorized to view private profile');
+						} else {
+							\Log::info(print_r($authorized_profile_id, true) . ' is a follower of ' . print_r($username, true) . ' => authorization granted!');
+							$authorized = true;
+						}
+
+				}
+				if (!$authorized) {
+					\Log::debug('Profile is private & remote user not authorized');
 					$profile = null;
 					return view('profile.private', compact('user'));
 				}
