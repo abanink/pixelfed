@@ -22,8 +22,6 @@ class ValidateRemoteAuthentication
     {
         \Log::info('In handler for Remote Authentication Validation based on token');
 	$owt = $request->query('owt');
-	// TODO remove the owt query parameter while processing later on
-//	$request->???
         if (!isset($owt)) {
                 return $next($request);
 	}
@@ -38,10 +36,12 @@ class ValidateRemoteAuthentication
 
 	if ($r->isEmpty()) {
 		\Log::info('Token not found');
-		return $next($request);
+		return redirect()->to($request->fullUrlWithoutQuery('owt'));
 	}
 	\Log::debug('Found this as token in our DB: ' . print_r($r, true));
 
+	// TODO shouldn't we remove the token here as it has been consumed?
+	
 	$remote_profile = $r[0]->remote_url;	
 	\Log::debug('Logging in as ' . $remote_profile);
 	// TODO authenticate user based on 'profile'-based guard: if the user exists as a 'profile' we authenticate the user to log in
@@ -49,7 +49,7 @@ class ValidateRemoteAuthentication
 	$profiles = Profile::where('remote_url', $remote_profile)->get();
 	if (count($profiles) === 0) {
 		\Log::info('Failed to locate the profile in DB');
-		return $next($request);
+		return redirect()->to($request->fullUrlWithoutQuery('owt'));
 	}
 	$p = $profiles[0];
 
@@ -57,9 +57,8 @@ class ValidateRemoteAuthentication
 	$request->session()->regenerate();
 	// remember the remotely authenticated visitor as authorized in this session 
 	$request->session()->put('authorized_profile', $p->id);
-	$request->flash();
 
-        return $next($request);
+	return redirect()->to($request->fullUrlWithoutQuery('owt'));
     }
 
     private function purge($minutes) {
