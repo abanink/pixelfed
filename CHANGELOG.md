@@ -1,6 +1,52 @@
 # Release Notes
 
-## [Unreleased](https://github.com/pixelfed/pixelfed/compare/v0.11.6...dev)
+## [Unreleased](https://github.com/pixelfed/pixelfed/compare/v0.11.8...dev)
+
+### Added
+- Import from Instagram ([#4466](https://github.com/pixelfed/pixelfed/pull/4466)) ([cf3078c5](https://github.com/pixelfed/pixelfed/commit/cf3078c5))
+
+### Updates
+- Update Notifications.vue component, fix filtering logic to prevent endless spinner ([3df9b53f](https://github.com/pixelfed/pixelfed/commit/3df9b53f))
+- Update Direct Messages, fix api endpoint ([fe8728c0](https://github.com/pixelfed/pixelfed/commit/fe8728c0))
+- Update nginx config ([fbdc6358](https://github.com/pixelfed/pixelfed/commit/fbdc6358))
+- Update api routes, add DeprecatedEndpoint middleware. For more info, visit [pixelfed.org/kb/10404](https://pixelfed.org/kb/10404) ([a8453e77](https://github.com/pixelfed/pixelfed/commit/a8453e77))
+- Update admin dashboard, improve users section ([36b6bf48](https://github.com/pixelfed/pixelfed/commit/36b6bf48))
+- Update AdminApiController, add instance stats endpoint ([89c3710d](https://github.com/pixelfed/pixelfed/commit/89c3710d))
+- Update config, re-add `PF_MAX_USERS` .env variable to limit max users to 1000 by default ([a6d10f03](https://github.com/pixelfed/pixelfed/commit/a6d10f03))
+- Update AdminApiController, fix stats ([5c5541fc](https://github.com/pixelfed/pixelfed/commit/5c5541fc))
+- Update AdminApiController, include more data for getUser method ([4f850e54](https://github.com/pixelfed/pixelfed/commit/4f850e54))
+- Update AdminApiController, improve admin moderation tools ([763ce19a](https://github.com/pixelfed/pixelfed/commit/763ce19a))
+- Update ActivityPubFetchService, fix authorized_fetch compatibility. Closes #1850, #2713, #2935 ([63a7879c](https://github.com/pixelfed/pixelfed/commit/63a7879c))
+- Update IG Import commands, fix stalled import queue ([b18f3fba](https://github.com/pixelfed/pixelfed/commit/b18f3fba))
+- Update TransformImports command, improve handling of imported posts that already exist or are from deleted accounts ([892907d5](https://github.com/pixelfed/pixelfed/commit/892907d5))
+- Update console kernel, add import upload gc ([afe6948d](https://github.com/pixelfed/pixelfed/commit/afe6948d))
+- Update ImportService, filter deleted posts from getImportedPosts endpoint ([10dd348c](https://github.com/pixelfed/pixelfed/commit/10dd348c))
+- Update FixStatusCount, improve command and support remote count resync ([04f4f8ba](https://github.com/pixelfed/pixelfed/commit/04f4f8ba))
+- Update StatusRemoteUpdatePipeline, fix missing mime and size attributes that cause empty media previews on our mobile app ([ea54413e](https://github.com/pixelfed/pixelfed/commit/ea54413e))
+- Update ComposeModal.vue, fix scroll issue and dont hide scrollbar ([2d959fb3](https://github.com/pixelfed/pixelfed/commit/2d959fb3))
+- Update AccountImport, add select first 100 posts button ([625a76a5](https://github.com/pixelfed/pixelfed/commit/625a76a5))
+-  ([](https://github.com/pixelfed/pixelfed/commit/))
+
+## [v0.11.8 (2023-05-29)](https://github.com/pixelfed/pixelfed/compare/v0.11.7...v0.11.8)
+
+### API Changes
+- Added `following_since` attribute to `/api/v1/accounts/relationships` endpoint when `_pe=1` (pixelfed entity) parameter is present ([992d910b](https://github.com/pixelfed/pixelfed/commit/992d910b))
+- Added `/api/v1.1/accounts/app/settings` endpoint and UserAppSettings model to store app specific settings ([a2305d5f](https://github.com/pixelfed/pixelfed/commit/a2305d5f))
+
+### Added
+- Post edits ([#4416](https://github.com/pixelfed/pixelfed/pull/4416)) ([98cf8f3](https://github.com/pixelfed/pixelfed/commit/98cf8f3))
+
+### Updates
+- Update StatusService, fix bug in getFull method ([4d8b4dcf](https://github.com/pixelfed/pixelfed/commit/4d8b4dcf))
+- Update Config, bump version for post edit support without having to clear cache ([c0190d84](https://github.com/pixelfed/pixelfed/commit/c0190d84))
+- Update EditHistoryModal, fix caption rendering ([0f803446](https://github.com/pixelfed/pixelfed/commit/0f803446))
+- Update StatusRemoteUpdatePipeline, fix typo ([109d0419](https://github.com/pixelfed/pixelfed/commit/109d0419))
+- Update StatusActivityPubDeliver, fix delivery addressing ([1f2183ee](https://github.com/pixelfed/pixelfed/commit/1f2183ee))
+- Update UpdateStatusService, fix formatting issue. Fixes #4423 ([4479055e](https://github.com/pixelfed/pixelfed/commit/4479055e))
+- Update nginx config ([ee3b6e09](https://github.com/pixelfed/pixelfed/commit/ee3b6e09))
+- Update Status model, increase max mentions, hashtags and links ([1430f532](https://github.com/pixelfed/pixelfed/commit/1430f532))
+
+## [v0.11.7 (2023-05-24)](https://github.com/pixelfed/pixelfed/compare/v0.11.6...v0.11.7)
 
 ### API Changes
 - Added [/api/v1/followed_tags](https://docs.joinmastodon.org/methods/followed_tags/) api endpoint ([175a8486](https://github.com/pixelfed/pixelfed/commit/175a8486))
@@ -9,6 +55,7 @@
 - Added `only_media` support to /api/v1/timelines/tag/:id api endpoint ([b5fe956a](https://github.com/pixelfed/pixelfed/commit/b5fe956a))
 - Added /api/v2/instance api endpoint ([167dbcdd](https://github.com/pixelfed/pixelfed/commit/167dbcdd))
 - Removed api endpoint cloud ip block logic ([6a2daf1f](https://github.com/pixelfed/pixelfed/commit/6a2daf1f))
+- Added idempotency-key support to /api/v1/statuses endpoint ([c54cdd3e](https://github.com/pixelfed/pixelfed/commit/c54cdd3e))
 
 ### Added
 - Added store remote media on S3 config setting, disabled by default ([51768083](https://github.com/pixelfed/pixelfed/commit/51768083))
@@ -44,7 +91,15 @@
 - Update StatusController, disable post embeds from spam accounts ([c167af43](https://github.com/pixelfed/pixelfed/commit/c167af43))
 - Update ProfileController, require login to view spam accounts, and disable profile embeds and atom feeds for spam accounts ([dd2f5bb9](https://github.com/pixelfed/pixelfed/commit/dd2f5bb9))
 - Update Settings, allow users to disable atom feeds ([3662d3de](https://github.com/pixelfed/pixelfed/commit/3662d3de))
--  ([](https://github.com/pixelfed/pixelfed/commit/))
+- Update ApiV1Controller, filter muted/blocked accounts from tag timeline ([f42c1140](https://github.com/pixelfed/pixelfed/commit/f42c1140))
+- Update admin moderation logic, only re-add top level posts ([c6ffda96](https://github.com/pixelfed/pixelfed/commit/c6ffda96))
+- Update admin dashboard, add mass account deletes ([b8426cce](https://github.com/pixelfed/pixelfed/commit/b8426cce))
+- Update scheduler, fix S3 media garbage collection not being executed when cloud storage is enabled via dashboard without .env/config being enabled ([adb070f1](https://github.com/pixelfed/pixelfed/commit/adb070f1))
+- Update MediaController, add fallback for local files that are later stored on S3 but still are referenced in cached objects remotely ([4973cb46](https://github.com/pixelfed/pixelfed/commit/4973cb46))
+- Update PublicTimelineService, improve warmCache query ([9f901d65](https://github.com/pixelfed/pixelfed/commit/9f901d65))
+- Update AP Inbox, fix delete handling ([2800c888](https://github.com/pixelfed/pixelfed/commit/2800c888))
+- Update login/register views and captcha config, enable login or register captchas or both ([c071c719](https://github.com/pixelfed/pixelfed/commit/c071c719))
+- Update login form, allow admins to enable captcha after X failed attempts. Admins can set the number of attempts before captcha is shown, default is 2 attempts before captcha is required ([221ddce0](https://github.com/pixelfed/pixelfed/commit/221ddce0))
 
 ## [v0.11.6 (2023-05-03)](https://github.com/pixelfed/pixelfed/compare/v0.11.5...v0.11.6)
 
@@ -1074,7 +1129,7 @@
 - Added post embeds ([1fecf717](https://github.com/pixelfed/pixelfed/commit/1fecf717))
 - Added profile embeds ([fb7a3cf0](https://github.com/pixelfed/pixelfed/commit/fb7a3cf0))
 - Added Force MetroUI labs experiment ([#1889](https://github.com/pixelfed/pixelfed/pull/1889))
-- Added Stories, to enable add ```STORIES_ENABLED=true``` to ```.env```	 and run ```php artisan config:cache && php artisan cache:clear```. If opcache is enabled you may need to reload the web server.
+- Added Stories, to enable add ```STORIES_ENABLED=true``` to ```.env```  and run ```php artisan config:cache && php artisan cache:clear```. If opcache is enabled you may need to reload the web server.
 
 ### Fixed
 - Fixed like and share/reblog count on profiles ([86cb7d09](https://github.com/pixelfed/pixelfed/commit/86cb7d09))

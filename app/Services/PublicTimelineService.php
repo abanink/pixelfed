@@ -72,17 +72,37 @@ class PublicTimelineService {
 		return Redis::zcard(self::CACHE_KEY);
 	}
 
+    public static function deleteByProfileId($profileId)
+    {
+        $res = Redis::zrange(self::CACHE_KEY, 0, '-1');
+        if(!$res) {
+            return;
+        }
+        foreach($res as $postId) {
+            $s = StatusService::get($postId);
+            if(!$s) {
+                self::rem($postId);
+                continue;
+            }
+            if($s['account']['id'] == $profileId) {
+                self::rem($postId);
+            }
+        }
+
+        return;
+    }
+
 	public static function warmCache($force = false, $limit = 100)
 	{
 		if(self::count() == 0 || $force == true) {
 			$hideNsfw = config('instance.hide_nsfw_on_public_feeds');
 			Redis::del(self::CACHE_KEY);
-			$ids = Status::whereNull('uri')
-				->whereNull('in_reply_to_id')
+			$minId = SnowflakeService::byDate(now()->subDays(14));
+			$ids = Status::where('id', '>', $minId)
+				->whereNull(['uri', 'in_reply_to_id', 'reblog_of_id'])
 				->when($hideNsfw, function($q, $hideNsfw) {
                   return $q->where('is_nsfw', false);
                 })
-				->whereNull('reblog_of_id')
 				->whereIn('type', ['photo', 'photo:album', 'video', 'video:album', 'photo:video:album'])
 				->whereScope('public')
 				->orderByDesc('id')

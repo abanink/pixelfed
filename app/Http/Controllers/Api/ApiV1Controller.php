@@ -905,13 +905,16 @@ class ApiV1Controller extends Controller
 			'id'    => 'required|array|min:1|max:20',
 			'id.*'  => 'required|integer|min:1|max:' . PHP_INT_MAX
 		]);
+		$napi = $request->has(self::PF_API_ENTITY_KEY);
 		$pid = $request->user()->profile_id ?? $request->user()->profile->id;
 		$res = collect($request->input('id'))
 			->filter(function($id) use($pid) {
 				return intval($id) !== intval($pid);
 			})
-			->map(function($id) use($pid) {
-				return RelationshipService::get($pid, $id);
+			->map(function($id) use($pid, $napi) {
+				return $napi ?
+				 RelationshipService::getWithDate($pid, $id) :
+				 RelationshipService::get($pid, $id);
 		});
 		return $this->json($res);
 	}
@@ -2444,14 +2447,17 @@ class ApiV1Controller extends Controller
 					'id' => $dm->id,
 					'unread' => false,
 					'accounts' => [
-						AccountService::getMastodon($from)
+						AccountService::getMastodon($from, true)
 					],
 					'last_status' => StatusService::getDirectMessage($dm->status_id)
 				];
 				return $res;
 			})
 			->filter(function($dm) {
-				return isset($dm['accounts']) && count($dm['accounts']) && !empty($dm['last_status']);
+				if(!$dm || empty($dm['last_status']) || !isset($dm['accounts']) || !count($dm['accounts']) || !isset($dm['accounts'][0]) || !isset($dm['accounts'][0]['id'])) {
+					return false;
+				}
+				return true;
 			})
 			->unique(function($item, $key) {
 				return $item['accounts'][0]['id'];
@@ -2785,6 +2791,13 @@ class ApiV1Controller extends Controller
 			'collection_ids' => 'sometimes|array|max:3',
 			'comments_disabled' => 'sometimes|boolean',
 		]);
+
+		if($request->hasHeader('idempotency-key')) {
+			$key = 'pf:api:v1:status:idempotency-key:' . $request->user()->id . ':' . hash('sha1', $request->header('idempotency-key'));
+			$exists = Cache::has($key);
+			abort_if($exists, 400, 'Duplicate idempotency key.');
+			Cache::put($key, 1, 3600);
+		}
 
 		if(config('costar.enabled') == true) {
 			$blockedKeywords = config('costar.keyword.block');
@@ -3129,6 +3142,8 @@ class ApiV1Controller extends Controller
 			}
 		}
 
+		$filters = UserFilterService::filters($request->user()->profile_id);
+
 		if(!$min && !$max) {
 			$id = 1;
 			$dir = '>';
@@ -3154,6 +3169,9 @@ class ApiV1Controller extends Controller
 					return false;
 				}
 				return $i && isset($i['account']);
+			})
+			->filter(function($i) use($filters) {
+				return !in_array($i['account']['id'], $filters);
 			})
 			->values()
 			->toArray();

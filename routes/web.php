@@ -312,6 +312,13 @@ Route::domain(config('pixelfed.domain.app'))->middleware(['validemail', 'twofact
 			Route::get('profile/collections/{id}', 'CollectionController@getUserCollections');
 
 			Route::post('compose/tag/untagme', 'MediaTagController@untagProfile');
+
+			Route::post('import/ig', 'ImportPostController@store');
+			Route::get('import/ig/config', 'ImportPostController@getConfig');
+			Route::post('import/ig/media', 'ImportPostController@storeMedia');
+			Route::post('import/ig/existing', 'ImportPostController@getImportedFiles');
+			Route::post('import/ig/posts', 'ImportPostController@getImportedPosts');
+			Route::post('import/ig/processing', 'ImportPostController@getProcessingCount');
 		});
 
 		Route::group(['prefix' => 'web/stories'], function () {
@@ -583,6 +590,7 @@ Route::domain(config('pixelfed.domain.app'))->middleware(['validemail', 'twofact
 			Route::view('tagging-people', 'site.help.tagging-people')->name('help.tagging-people');
 			Route::view('licenses', 'site.help.licenses')->name('help.licenses');
 			Route::view('instance-max-users-limit', 'site.help.instance-max-users')->name('help.instance-max-users-limit');
+			Route::view('import', 'site.help.import')->name('help.import');
 		});
 		Route::get('newsroom/{year}/{month}/{slug}', 'NewsroomController@show');
 		Route::get('newsroom/archive', 'NewsroomController@archive');
@@ -622,6 +630,7 @@ Route::domain(config('pixelfed.domain.app'))->middleware(['validemail', 'twofact
 	Route::get('auth/invite/a/{code}', 'AdminInviteController@index');
 	Route::post('api/v1.1/auth/invite/admin/re', 'AdminInviteController@apiRegister')->middleware('throttle:5,1440');
 
+	Route::get('storage/m/_v2/{pid}/{mhash}/{uhash}/{f}', 'MediaController@fallbackRedirect');
 	Route::get('stories/{username}', 'ProfileController@stories');
 	Route::get('p/{id}', 'StatusController@shortcodeRedirect');
 	Route::get('c/{collection}', 'CollectionController@show');

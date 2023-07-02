@@ -33,8 +33,15 @@ class Kernel extends ConsoleKernel
         $schedule->command('gc:passwordreset')->dailyAt('09:41');
         $schedule->command('gc:sessions')->twiceDaily(13, 23);
 
-        if(config('pixelfed.cloud_storage') && config('media.delete_local_after_cloud')) {
+        if(in_array(config_cache('pixelfed.cloud_storage'), ['1', true, 'true']) && config('media.delete_local_after_cloud')) {
             $schedule->command('media:s3gc')->hourlyAt(15);
+        }
+
+        if(config('import.instagram.enabled')) {
+            $schedule->command('app:transform-imports')->everyFourMinutes();
+            $schedule->command('app:import-upload-garbage-collection')->hourlyAt(51);
+            $schedule->command('app:import-remove-deleted-accounts')->hourlyAt(37);
+            $schedule->command('app:import-upload-clean-storage')->twiceDailyAt(1, 13, 32);
         }
     }
 

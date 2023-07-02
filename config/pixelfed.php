@@ -23,7 +23,7 @@ return [
 	| This value is the version of your Pixelfed instance.
 	|
 	*/
-	'version' => '0.11.6',
+	'version' => '0.11.8',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -198,7 +198,8 @@ return [
 	| Allow a maximum number of user accounts. Default: off
 	|
 	*/
-	'max_users' => env('PF_MAX_USERS', false),
+    'max_users' => env('PF_MAX_USERS', 1000),
+    'enforce_max_users' => env('PF_ENFORCE_MAX_USERS', true),
 
 	/*
 	|--------------------------------------------------------------------------
