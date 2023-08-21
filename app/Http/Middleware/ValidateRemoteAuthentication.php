@@ -7,8 +7,10 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 use App\Profile;
+use App\User;
 
 class ValidateRemoteAuthentication
 {
@@ -46,19 +48,42 @@ class ValidateRemoteAuthentication
 	\Log::debug('Logging in as ' . $remote_profile);
 	// TODO authenticate user based on 'profile'-based guard: if the user exists as a 'profile' we authenticate the user to log in
 
-	$profiles = Profile::where('remote_url', $remote_profile)->get();
-	if (count($profiles) === 0) {
+	$p = Profile::where('remote_url', $remote_profile)->first();
+	if (!$p) {
 		\Log::info('Failed to locate the profile in DB');
 		return redirect()->to($request->fullUrlWithoutQuery('owt'));
 	}
-	$p = $profiles[0];
+
+	$username = $p->username;
+	\Log::info('Trying to log in username ' . $username);
+
+	$user = User::whereUsername($username)->first();
+	if (!$user) {
+		\Log::info('User not found as a visitor - adding now');
+		$user = User::create([ 
+			'username' => $username,
+			'name' => $p->name,
+		]);
+		$user->register_source = 'owa';
+		$user->profile_id = $p->id;
+		$user->save();
+	} else {
+		\Log::info('User found as a visitor');
+	}
+
+	\Log::info('Logging user <' . $user->name . '> in now');
+	Auth::login($user);
+	\Log::info('user logged in');
 
 	// avoid session fixation attack by regenerating a new session ID
 	$request->session()->regenerate();
 	// remember the remotely authenticated visitor as authorized in this session 
-	$request->session()->put('authorized_profile', $p->id);
+	// TODO this should not be needed any more
+//	$request->session()->put('authorized_profile', $p->id);
 
-	return redirect()->to($request->fullUrlWithoutQuery('owt'));
+	// TODO test if we can just do 'return $next($request);'
+	//	return redirect()->to($request->fullUrlWithoutQuery('owt'));
+	return $next($request);
     }
 
     private function purge($minutes) {
