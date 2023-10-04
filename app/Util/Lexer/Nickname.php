@@ -24,7 +24,8 @@ class Nickname
             }
         }
 
-        $parts = explode('@', $url);
+	$parts = explode('@', $url);
+	\Log::debug('Nickname normalising. parts = ' . print_r($parts, true));
         $username = $parts[0];
         $domain = $parts[1];
 

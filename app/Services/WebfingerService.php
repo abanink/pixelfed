@@ -24,6 +24,7 @@ class WebfingerService
 				AccountService::get($profile->id);
 		}
 		$url = WebfingerUrl::generateWebfingerUrl($query);
+		\Log::debug('Webfinger->run: url = ' . print_r($url, true));
 		if(!Helpers::validateUrl($url)) {
 			return [];
 		}
@@ -61,8 +62,10 @@ class WebfingerService
 
 		$profile = Helpers::profileFetch($link);
 		if(!$profile) {
-			return;
+			\Log::debug('WebfingerService: Profile not found, returning with empty result');
+			return [];
 		}
+		\Log::debug('WebfingerService: Profile = ' . print_r($profile, true));
 		return $mastodonMode ?
 			AccountService::getMastodon($profile->id, true) :
 			AccountService::get($profile->id);

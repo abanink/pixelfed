@@ -23,67 +23,61 @@ class ValidateRemoteAuthentication
     public function handle(Request $request, Closure $next): Response
     {
         \Log::info('In handler for Remote Authentication Validation based on token');
-	$owt = $request->query('owt');
+		$owt = $request->query('owt');
         if (!isset($owt)) {
                 return $next($request);
-	}
+		}
 
-	\Log::debug('owt token provided');
+		// https://codeberg.org/streams/streams/src/branch/dev/spec/OpenWebAuth/Home.md
+		//  The OpenWebAuth token service MUST discard tokens after first use and SHOULD discard unused tokens within a few minutes of generation.
+		\Log::debug('owt token provided');
+		// purge tokens older than 3 minutes
+		self::purge(3);
+		// find out which user to log in based on owt token
+		$owtMatchDb = DB::table('owa_verifications')->where('token', $owt);
+		$r = $owtMatchDb->first();
+		if (!$r) {
+			\Log::info('Token not found');
+			return next($request);
+		}
+		$owtMatchDb->delete();
+		
+		\Log::debug('Found this as token in our DB: ' . print_r($r, true));
+		$remote_profile = $r->remote_url;	
+		
+		\Log::debug('Trying to log in in as ' . $remote_profile);
+		$p = Profile::where('remote_url', $remote_profile)->first();
+		if (!$p) {
+			\Log::info('Failed to locate the profile in DB');
+			return next($request);
+		}
 
-	// purge tokens older than 3 minutes
-	self::purge(3);
+		$username = $p->username;
+		\Log::info('Trying to log in username ' . $username);
 
-	// find out which user to log in based on owt token
-	$r = DB::table('owa_verifications')->where('token', $owt)->get();
+		$user = User::whereUsername($username)->first();
+		if (!$user) {
+			\Log::info('User not found as a visitor - adding now');
+			$user = User::create([ 
+				'username' => $username,
+				'name' => $p->name,
+				'email' => $username  // not an email address but a unique id must be filled as email in the DB
+			]);
+			$user->register_source = 'owa';
+			$user->profile_id = $p->id;
+			$user->save();
+		} else {
+			\Log::info('User found as a visitor');
+		}
 
-	if ($r->isEmpty()) {
-		\Log::info('Token not found');
-		return redirect()->to($request->fullUrlWithoutQuery('owt'));
-	}
-	\Log::debug('Found this as token in our DB: ' . print_r($r, true));
+		\Log::info('Logging user <' . $user->name . '> in now');
+		Auth::login($user);
+		\Log::info('user logged in');
 
-	// TODO shouldn't we remove the token here as it has been consumed?
-	
-	$remote_profile = $r[0]->remote_url;	
-	\Log::debug('Logging in as ' . $remote_profile);
-	// TODO authenticate user based on 'profile'-based guard: if the user exists as a 'profile' we authenticate the user to log in
+		// avoid session fixation attack by regenerating a new session ID
+		$request->session()->regenerate();
 
-	$p = Profile::where('remote_url', $remote_profile)->first();
-	if (!$p) {
-		\Log::info('Failed to locate the profile in DB');
-		return redirect()->to($request->fullUrlWithoutQuery('owt'));
-	}
-
-	$username = $p->username;
-	\Log::info('Trying to log in username ' . $username);
-
-	$user = User::whereUsername($username)->first();
-	if (!$user) {
-		\Log::info('User not found as a visitor - adding now');
-		$user = User::create([ 
-			'username' => $username,
-			'name' => $p->name,
-		]);
-		$user->register_source = 'owa';
-		$user->profile_id = $p->id;
-		$user->save();
-	} else {
-		\Log::info('User found as a visitor');
-	}
-
-	\Log::info('Logging user <' . $user->name . '> in now');
-	Auth::login($user);
-	\Log::info('user logged in');
-
-	// avoid session fixation attack by regenerating a new session ID
-	$request->session()->regenerate();
-	// remember the remotely authenticated visitor as authorized in this session 
-	// TODO this should not be needed any more
-//	$request->session()->put('authorized_profile', $p->id);
-
-	// TODO test if we can just do 'return $next($request);'
-	//	return redirect()->to($request->fullUrlWithoutQuery('owt'));
-	return $next($request);
+		return $next($request);
     }
 
     private function purge($minutes) {

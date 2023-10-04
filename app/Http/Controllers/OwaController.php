@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 use App\Profile;
 
+use App\Services\WebfingerService;
+
 class OwaController extends Controller
 {
     /**
@@ -36,26 +38,39 @@ class OwaController extends Controller
 			    $keyId = str_replace('acct:', '', $keyId);
 			    \Log::debug('Looking for user whose remote_url matches the keyId ' . print_r($keyId, true));
 			    $r = Profile::where('remote_url', $keyId)->first();
+//			    $r = Profile::where('key_id', $keyId)->orWhere('remote_url', $keyId)->first();
+//			    $r = Profile::where('key_id', $keyId)->first();
 			    \Log::debug('Found profile: ' . print_r($r, true));
 			    if (!$r) {
-				    // discover -- TODO not sure this is needed here
-				    \Log::debug('TODO Profile not found => missing: discover resource');
-	    			    return response()->json($ret_response);
+				    // discover for no pre-existing relationship or keyId does not match a remote URL
+				    // The principals involved in the authentication may or may not have any pre-existing relationship
+				    \Log::debug('Profile not found => discover resource');
+
+				    $wf_account = WebfingerService::lookup($keyId);
+				    \Log::debug('Webfinger returned ' . print_r($wf_account, true));
+
+				    $r = Profile::where('remote_url', $wf_account['url'])->first();
+				    \Log::debug('Found profile: ' . print_r($r, true));
+
+				    if (!$r) {
+					    \Log::debug('Not found - returning success = false');    
+					    return response()->json($ret_response);
+				    }
 			    }
 			    // verify the signature header
 			    $verified = self::sig_verify($request, $sigblock, $keyId, $r->public_key);
 			    \Log::debug('Verification output: ' . print_r($verified, true));
-                            if ($verified && $verified['header_signed'] && $verified['header_valid'] && ($verified['content_valid'] || (!$verified['content_signed']))) {
-                                $ret_response['success'] = true;
-				$token = self::random_string(32);
-				//self::verify_create('owt', 0, $token, $r->remote_url);
-				DB::insert('INSERT into owa_verifications (token, remote_url, created_at) values (?,?,?)', [$token, $r->remote_url, now()]);
-                                $result = '';
-                                openssl_public_encrypt($token, $result, $r->public_key);
-                                $ret_response['encrypted_token'] = self::base64url_encode($result);
-                            } else {
-                                \Log::info('OWA fail for ' . $r->remote_url);
-                            }
+				if ($verified && $verified['header_signed'] && $verified['header_valid'] && ($verified['content_valid'] || (!$verified['content_signed']))) {
+				    $ret_response['success'] = true;
+				    $token = self::random_string(32);
+				    //self::verify_create('owt', 0, $token, $r->remote_url);
+				    DB::insert('INSERT into owa_verifications (token, remote_url, created_at) values (?,?,?)', [$token, $r->remote_url, now()]);
+				    $result = '';
+				    openssl_public_encrypt($token, $result, $r->public_key);
+				    $ret_response['encrypted_token'] = self::base64url_encode($result);
+				} else {
+				    \Log::info('OWA fail for ' . $r->remote_url);
+				}
 
 		    }
 	    }
@@ -165,7 +180,7 @@ class OwaController extends Controller
 	}
 
 	\Log::debug('Signed headers: ' . print_r($signed_headers, true));
-        $signed_data = '';
+    $signed_data = '';
 	foreach ($signed_headers as $h) {
 	    $h_val = $request->header($h);
 	    \Log::debug('Checking header ' . print_r($h, true) . ' = ' . print_r($h_val, true));
