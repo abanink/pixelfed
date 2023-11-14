@@ -55,9 +55,9 @@ class ValidateRemoteAuthentication
 		$username = $p->username;
 		\Log::info('Trying to log in username ' . $username);
 
-		$user = User::whereUsername($username)->first();
+		$user = User::whereUsername($username)->where('register_source','owa')->first();
 		if (!$user) {
-			\Log::info('User not found as a visitor - adding now');
+			\Log::info('User not found as an OpenWebAuth visitor - adding now');
 			$user = User::create([ 
 				'username' => $username,
 				'name' => $p->name,
@@ -66,6 +66,9 @@ class ValidateRemoteAuthentication
 			$user->register_source = 'owa';
 			$user->profile_id = $p->id;
 			$user->save();
+
+			$p->user_id = $user->id;
+			$p->save();
 		} else {
 			\Log::info('User found as a visitor');
 		}
