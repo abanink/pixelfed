@@ -4,6 +4,8 @@ use App\Http\Controllers\OwaController;
 
 Route::domain(config('pixelfed.domain.app'))->group(function() {
 	Route::match(['GET','POST'], '/owa', OwaController::class);
+	Route::get('/openwebauth', 'OpenWebAuthController@showLoginForm');
+	Route::post('/openwebauth', 'OpenWebAuthController@openWebAuth')->name('openwebauth');
 });
 
 Route::domain(config('pixelfed.domain.admin'))->prefix('i/admin')->group(function () {

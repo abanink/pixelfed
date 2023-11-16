@@ -69,7 +69,9 @@
                                 <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold">
                                     {{ __('Login') }}
                                 </button>
-
+                                <a href="/openwebauth" class="btn btn-success btn-block btn-lg font-weight-bold">
+                                    {{ __('Remote Open Web Authentication') }}
+                                </a>
                             </div>
                         </div>
                     </form>
