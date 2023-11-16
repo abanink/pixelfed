@@ -43,7 +43,7 @@
 							<div class="media-body-wrapper">
 								<div v-if="!post.media_attachments.length" class="media-body-comment">
 									<p class="media-body-comment-username">
-										<a :href="post.account.url" :id="'acpop_'+post.id" tabindex="0" @click.prevent="goToProfile(post.account)">
+										<a :href="canOpenRemoteProfile && post.account.url" :id="'acpop_'+post.id" tabindex="0" @click.prevent="canOpenRemoteProfile && goToProfile(post.account)">
 											{{ post.account.acct }}
 										</a>
 
@@ -77,7 +77,7 @@
 								<div v-else>
                                     <div :class="[ post.content && post.content.length || post.media_attachments.length ? 'media-body-comment' : '']">
     									<p class="media-body-comment-username">
-    										<a :href="post.account.url" @click.prevent="goToProfile(post.account)">
+    										<a :href="canOpenRemoteProfile && post.account.url" @click.prevent="canOpenRemoteProfile && goToProfile(post.account)">
     											{{ post.account.acct }}
     										</a>
     									</p>
@@ -303,7 +303,7 @@
 			</p>
 		</div>
 
-		<div class="d-flex align-items-top reply-form child-reply-form">
+		<div v-if="canInteract" class="d-flex align-items-top reply-form child-reply-form">
 			<img class="shadow-sm media-avatar border" :src="profile.avatar" width="40" height="40" draggable="false" onerror="this.onerror=null;this.src='/storage/avatars/default.jpg?v=0';">
 
 			<div v-show="!settings.expanded" class="w-100">
@@ -467,7 +467,9 @@
 				},
 				showEmptyRepliesRefresh: false,
 				commentReplyIndex: undefined,
-                deletingIndex: undefined
+                deletingIndex: undefined,
+				canOpenRemoteProfile: true,
+				canInteract: true
 			}
 		},
 
@@ -476,6 +478,11 @@
 			// 	this.feed.push(this.status.replies);
 			// }
 			this.fetchContext();
+
+			if (this.profile.register_source == 'owa') {
+				this.canOpenRemoteProfile = false;
+				this.canInteract = false;
+			} 
 		},
 
 		computed: {

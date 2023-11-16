@@ -25,20 +25,20 @@
 						<div class="media align-items-center">
 							<img :src="account.avatar" width="40" height="40" style="border-radius: 8px;" class="mr-3 shadow-sm" onerror="this.src='/storage/avatars/default.jpg?v=0';this.onerror=null;">
 							<div class="media-body">
-								<p class="mb-0 text-truncate"><a :href="account.url" class="text-dark font-weight-bold text-decoration-none" @click.prevent="goToProfile(account)">{{ getUsername(account) }}</a></p>
+								<p class="mb-0 text-truncate"><a :href="canEditProfile && account.url" class="text-dark font-weight-bold text-decoration-none" @click.prevent="canEditProfile && goToProfile(account)">{{ getUsername(account) }}</a></p>
 								<p class="mb-0 mt-n1 text-dark font-weight-bold small text-break">&commat;{{ account.acct }}</p>
 							</div>
 
 							<div>
 								<button
-									v-if="account.follows == null || account.id == user.id"
+									v-if="canEditProfile && (account.follows == null || account.id == user.id)"
 									class="btn btn-outline-muted rounded-pill btn-sm font-weight-bold"
 									@click="goToProfile(profile)"
 									style="width:110px;">
 									View Profile
 								</button>
 								<button
-									v-else-if="account.follows"
+									v-else-if="canUpdateFollowing && account.follows"
 									class="btn btn-outline-muted rounded-pill btn-sm font-weight-bold"
 									:disabled="isUpdatingFollowState"
 									@click="handleUnfollow(index)"
@@ -49,7 +49,7 @@
 									<span v-else>Following</span>
 								</button>
 								<button
-									v-else-if="!account.follows"
+									v-else-if="canUpdateFollowing && !account.follows"
 									class="btn btn-primary rounded-pill btn-sm font-weight-bold"
 									:disabled="isUpdatingFollowState"
 									@click="handleFollow(index)"
@@ -107,8 +107,17 @@
 				cursor: undefined,
 				isUpdatingFollowState: false,
 				followStateIndex: undefined,
-				user: window._sharedData.user
+				user: window._sharedData.user,
+				canEditProfile: true,
+				canUpdateFollowing: true,
 			}
+		},
+
+		mounted() {
+			if (this.user.register_source == 'owa') {
+				this.canEditProfile = false;
+				this.canUpdateFollowing = false;
+			} 
 		},
 
 		methods: {
