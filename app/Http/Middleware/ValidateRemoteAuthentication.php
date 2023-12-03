@@ -61,8 +61,11 @@ class ValidateRemoteAuthentication
 			$user = User::create([ 
 				'username' => $username,
 				'name' => $p->name,
-				'email' => $username  // not an email address but a unique id must be filled as email in the DB
+				'email' => $username,  // not an email address but a unique id must be filled as email in the DB
+				'password' => substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 32), // password cannot be NULL
 			]);
+
+			// these attributes are not mass assignable so saving them here separately
 			$user->register_source = 'owa';
 			$user->profile_id = $p->id;
 			$user->save();
